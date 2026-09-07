@@ -1,5 +1,7 @@
 # 测试报告
 
+<!-- 保存到业务仓库的 docs/tester/<feature-id>/verification.md，附件放在同一功能目录的 evidence/ 下；<feature-id> 替换为实际功能标识，也可直接放在 docs/tester/。填写时移除此说明。 -->
+
 ## 范围
 
 <检查了什么、对应哪些需求；填写被测版本、环境、关键输入以及需求或验收的真实来源>
