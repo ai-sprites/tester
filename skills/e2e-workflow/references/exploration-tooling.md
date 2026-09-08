@@ -1,6 +1,6 @@
 # 实时探索与工具回退
 
-探索用于确认用户步骤、分支和可见结果，并发现可重复的测试信号。它提供计划依据，不能代替独立 runner 的测试通过证据。阶段入口见 [E2E 工作流](workflow.md)。
+探索用于确认用户步骤、分支和可见结果，并发现可重复的测试信号。它提供计划依据，不能代替独立 runner 的测试通过证据。阶段入口见 [E2E 工作流](../SKILL.md)。
 
 ## 选择可用工具
 
@@ -19,7 +19,31 @@
 3. 输出不包含凭据、敏感表单值或完整认证状态。将确实需要留存的观察转为脱敏证据，记录为探索结果。
 4. 保存本次创建文件的清单，完成后仅清理这些文件；原有 scratch、用户修改和既有证据保持原状。
 
-也可使用已安装 runner 支持的 debug、codegen 或 trace 功能。先核对当前安装版本、配置和帮助；不要因示例中的版本限制擅自升级框架或修改客户端配置。录制代码只是候选步骤，还需按 [生成阶段](generate.md) 转为独立、稳定的测试。
+也可使用已安装 runner 支持的 debug、codegen 或 trace 功能。先核对当前安装版本、配置和帮助；不要因示例中的版本限制擅自升级框架或修改客户端配置。录制代码只是候选步骤，还需按 [生成阶段](../../e2e-generate/SKILL.md) 转为独立、稳定的测试。
+
+## 通用探测示例
+
+以下例子用于没有真实个人数据的测试页。把路径、fixture、页面区域和命令替换成目标项目已核实的值；只输出计划所需且已脱敏的信息。
+
+```ts
+import { test } from "@playwright/test"; // 有自定义 fixture 时使用项目真实导出
+
+test("probe", async ({ page }) => {
+  await page.goto("/example"); // 使用目标测试配置的 baseURL
+  const main = page.getByRole("main");
+  console.log(await main.ariaSnapshot());
+});
+```
+
+放入已核实可运行的 scratch 目录后，可按本地 runner 使用以下工具；所有路径与应用地址都只是示例。
+
+```sh
+npx playwright test path/to/probe.spec.ts
+npx playwright test path/to/spec.spec.ts:12 --debug
+npx playwright codegen --load-storage=path/to/session.json https://app.example.test
+```
+
+探测完成后只删除本次 probe。认证文件保持原有受保护位置，不随探测代码或输出提交。
 
 ## 受阻时如何交接
 
@@ -27,4 +51,4 @@
 
 其他已验证用例可以继续，是否移除必要覆盖取决于已有验收和明确的范围决定。不要因为工具受限而默默删除计划项，也不要反复询问已经确定的条件。正式计划与必要探索证据保存到 `docs/tester/<feature-id>/`；一次性输出不能提交为“测试通过”。
 
-状态安排见 [探索阶段](explore.md)；服务端分支见 [响应模拟](request-mocking.md)。
+状态安排见 [探索阶段](../../e2e-explore/SKILL.md)；服务端分支见 [响应模拟](request-mocking.md)。

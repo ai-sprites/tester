@@ -1,6 +1,6 @@
 # 响应模拟与局部补丁
 
-当分支依赖难以稳定、安全构造的服务端状态时读取。mock 的用途和证明范围必须进入计划；优先保持导航、输入、搜索、筛选和渲染流程真实，不能模拟掉本次要验证的行为。入口见 [E2E 工作流](workflow.md)。
+当分支依赖难以稳定、安全构造的服务端状态时读取。mock 的用途和证明范围必须进入计划；优先保持导航、输入、搜索、筛选和渲染流程真实，不能模拟掉本次要验证的行为。入口见 [E2E 工作流](../SKILL.md)。
 
 ## 先确定边界
 
@@ -28,3 +28,36 @@
 4. 证明目标 route 实际命中，等待补丁响应及其界面结果。断言应能区分期望模拟状态与未修改的真实状态，不能只检查页面仍可见。
 
 测试结束保留 mock 原因、修改字段、真实/模拟边界和结果证据到 `docs/tester/<feature-id>/`。原始账号数据、认证 headers 和响应中的秘密不进入报告或提交；一次性捕获文件按 [探索工具](exploration-tooling.md) 清理。
+
+## 例：只补丁一个安全读取的响应
+
+下面假设已确认 `/api/items/item-1` 是无副作用的 GET，响应含 `id` 和 `availability`。这些只是示例；实际端点、字段与状态须来自目标计划和捕获的契约。路由在触发请求的导航前安装，并在该测试结束时按 fixture 生命周期清理。
+
+```ts
+await page.route("**/api/items/item-1", async (route) => {
+  if (route.request().method() !== "GET") {
+    await route.continue();
+    return;
+  }
+  const response = await route.fetch();
+  if (!response.headers()["content-type"]?.includes("json")) {
+    await route.fulfill({ response });
+    return;
+  }
+  const payload = await response.json();
+  if (payload.id !== "item-1") throw new Error("Unexpected fixture response");
+  payload.availability = "unavailable";
+
+  const headers = { ...response.headers() };
+  delete headers["content-length"];
+  delete headers["content-encoding"];
+  await route.fulfill({
+    status: response.status(),
+    headers,
+    contentType: "application/json",
+    body: JSON.stringify(payload),
+  });
+});
+```
+
+测试仍须等待补丁响应并断言特定的 unavailable 界面状态，证明 route 确实命中；页面可见或真实响应透传本身不能算模拟成功。写请求不使用这段 `route.fetch()` 模式，除非真实写入本就是已授权、隔离的测试步骤。

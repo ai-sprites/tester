@@ -18,4 +18,4 @@
 
 bridge 原始导出包放在 `docs/artifact-bridge/`，测试报告和加工证据仍放在 `docs/tester/`。交接会提供真实路径、来源版本和未留存项，区分“已保存”“已提交”“远端可获取”“已导出”。未运行的检查不会记为通过。
 
-AI 执行时的完整模板、目录、旧产物迁移、索引和跨 Git 规则集中在 [Skill 的交付与留存规则](../skills/sprite-tester-verification/references/delivery.md)。
+AI 执行时的完整模板、目录、旧产物迁移、索引和跨 Git 规则集中在 [共享交付与留存规则](../skills/e2e-workflow/references/delivery.md)。
