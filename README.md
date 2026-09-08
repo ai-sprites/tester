@@ -1,13 +1,13 @@
 # tester
 
-独立测试角色：验证约定行为，保留真实证据并反馈问题。
+独立测试角色：验证约定行为，保留真实证据并反馈问题；内置从浏览器探索到自动化测试生成、执行与修复的 E2E 工作流。
 
 ## 复制到 AI 聊天
 
 把下面这段粘贴到当前项目的 AI 聊天，让 AI 读取手册、自行识别客户端并放置资源。
 
 ```text
-请阅读 https://github.com/ai-sprites/tester 的 README、接入手册和资源清单，将 sprite-tester 接入当前项目，一并带上本职能力 sprite-tester-verification 的完整 Skill、工作流和模板。
+请阅读 https://github.com/ai-sprites/tester 的 README、接入手册和资源清单，将 sprite-tester 接入当前项目，一并带上本职能力 sprite-tester-verification 的完整 Skill、工作流和模板，包括内置 E2E 探索、计划、可选工单同步、生成、执行与修复。
 请自行识别当前客户端及项目已有结构，使用同一明确版本的资源。角色正文、Skill 和模板原样完整拷贝，只适配必要的目录与客户端元数据格式，不重新概括、改写或删减内容，保留我的项目规则和自定义；其他专项 Skill 按我的明确请求或实际任务需要处理。
 资料 host repo 和产物业务仓库已明确的直接沿用，缺项合并用白话问一次，允许稍后配置。本角色生成的文档、记录和验证证据统一放在业务仓库的 docs/tester/ 下，可再按功能分子目录；旧散落产物保留内容迁入，并同步引用和已有索引。需要跨 Git 资料桥接时按手册自动补齐并告知我，不另外索取安装确认。
 完成后核对实际文件与相对引用，说明采用版本、保存位置、如何调用，以及当前客户端确需我完成的加载步骤。只有聊天权限时先在本会话使用，明确没有写入项目；不能读取源文件时直接说明，不自行编一个替代版本。
@@ -25,8 +25,23 @@
 | [skills/sprite-tester-verification/SKILL.md](skills/sprite-tester-verification/SKILL.md) | 本职能力入口 | 随角色默认完整接入 |
 | [skills/sprite-tester-verification/assets/templates/test-report.md](skills/sprite-tester-verification/assets/templates/test-report.md) | 完整产物模板 | 随角色默认完整接入 |
 | [skills/sprite-tester-verification/references/workflow.md](skills/sprite-tester-verification/references/workflow.md) | 工作流与专业参考 | 随角色默认完整接入 |
+| [skills/sprite-tester-verification/references/e2e/workflow.md](skills/sprite-tester-verification/references/e2e/workflow.md) | E2E 阶段入口与完成要求 | 随角色默认完整接入，按任务读取 |
+| [skills/sprite-tester-verification/references/e2e/explore.md](skills/sprite-tester-verification/references/e2e/explore.md) | 探索、覆盖与计划交接 | 随角色默认完整接入，按任务读取 |
+| [skills/sprite-tester-verification/references/e2e/sync-test-cases.md](skills/sprite-tester-verification/references/e2e/sync-test-cases.md) | 可选工单同步、身份与恢复 | 随角色默认完整接入，按任务读取 |
+| [skills/sprite-tester-verification/references/e2e/generate.md](skills/sprite-tester-verification/references/e2e/generate.md) | 从计划生成和验证测试 | 随角色默认完整接入，按任务读取 |
+| [skills/sprite-tester-verification/references/e2e/heal.md](skills/sprite-tester-verification/references/e2e/heal.md) | 失败诊断与修复 | 随角色默认完整接入，按任务读取 |
+| [skills/sprite-tester-verification/references/e2e/project-conventions.md](skills/sprite-tester-verification/references/e2e/project-conventions.md) | 目标项目结构和命令适配 | 随角色默认完整接入，按任务读取 |
+| [skills/sprite-tester-verification/references/e2e/auth-and-environment.md](skills/sprite-tester-verification/references/e2e/auth-and-environment.md) | 认证、会话、网络及数据 | 随角色默认完整接入，按任务读取 |
+| [skills/sprite-tester-verification/references/e2e/exploration-tooling.md](skills/sprite-tester-verification/references/e2e/exploration-tooling.md) | 浏览器探索与回退 | 随角色默认完整接入，按任务读取 |
+| [skills/sprite-tester-verification/references/e2e/selectors-and-locators.md](skills/sprite-tester-verification/references/e2e/selectors-and-locators.md) | 定位与控件断言 | 随角色默认完整接入，按任务读取 |
+| [skills/sprite-tester-verification/references/e2e/reliability-and-readiness.md](skills/sprite-tester-verification/references/e2e/reliability-and-readiness.md) | 就绪顺序和八类常见不稳定问题 | 随角色默认完整接入，按任务读取 |
+| [skills/sprite-tester-verification/references/e2e/request-mocking.md](skills/sprite-tester-verification/references/e2e/request-mocking.md) | 范围明确的请求模拟 | 随角色默认完整接入，按任务读取 |
+| [skills/sprite-tester-verification/references/e2e/ci-execution.md](skills/sprite-tester-verification/references/e2e/ci-execution.md) | 独立 CI 执行及证据 | 随角色默认完整接入，按任务读取 |
+| [skills/sprite-tester-verification/assets/templates/e2e-plan.md](skills/sprite-tester-verification/assets/templates/e2e-plan.md) | 完整 E2E 测试计划模板 | 随角色默认完整接入 |
 
 本职能力由 `sprite-tester-verification` 提供，默认随角色接入，也可单独使用该 Skill。
+
+E2E 能力集成在同一个本职 Skill 中，按当前阶段读取参考。保留独立计划、稳定案例 ID、明确就绪信号、两次隔离与相关测试组验证，以及可选远端同步的防重复核验；具体应用、登录、业务数据、测试目录和 CI 设置由目标项目提供。工单系统与浏览器 MCP 均非必需依赖。
 
 接入、加载检查和用户需要完成的步骤统一见 [接入手册](docs/installation.md)，不复制成业务文档。
 
@@ -35,6 +50,10 @@
 完成接入后，直接向 AI 描述任务，例如：
 
 > 请用 sprite-tester，依据当前验收要求和实际改动验证功能，记录执行过的检查、发现的问题和未覆盖部分。
+
+需要完整 E2E 自动化时，例如：
+
+> 请用 sprite-tester，根据这次改动探索用户流程，形成测试计划，再按本项目测试配置生成并验证 E2E 用例；失败时定位原因，把计划、报告和必要证据保存到 docs/tester/。
 
 客户端没有自动加载时，让 AI 先读取保存的角色文件或 Skill 入口。读取说明、写入项目和启动原生子代理是不同结果，按实际完成情况判断。
 
