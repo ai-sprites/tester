@@ -1,31 +1,62 @@
-# 从计划生成测试
+# Phase 2 — GENERATE：从计划生成测试
 
-输入是 `docs/tester/<feature-id>/e2e-plan.md` 或已明确的等价计划，不是探索会话。读取[项目适配](project-conventions.md)、相关 fixture/辅助代码和[可靠性](reliability-and-readiness.md)后再生成。
+**输入：**`docs/tester/<feature-id>/e2e-plan.md` 或已明确的等价计划，以及目标项目的测试配置和辅助代码。
 
-## 计划与代码对应
+**输出：**工程原生目录中的 spec 及必要辅助代码，与计划 TC 对应。此阶段完成代码准备，真实运行在 [Phase 3 — EXECUTE](ci-execution.md) 完成。
 
-1. 核对稳定 ID、表格与详情、标题、目标文件、setup、步骤及 `expect:`。只生成 `Lifecycle: active` 且 `Status: verified` 或 `verified with mock` 的案例；缺字段、重复 ID、阻碍与未确认预期先澄清受影响部分。
-2. 默认一个计划案例对应一个 test、一个计划分组对应 describe；沿用项目已有等价组织方式。测试标题与计划一致。合并、拆分或重命名时同步映射，不能丢失案例身份或预期。
-3. spec 注明从 Git 根可解析的计划路径及覆盖 ID，例如 `// plan: docs/tester/search/e2e-plan.md`、`// covers: TC-1, TC-2`。沿用已有更合适的注解格式也可，但必须能追溯；每个 test 自身可辨识对应 TC。
-4. 每个用户步骤旁保留与计划对应的步骤注释或项目 step 机制，每条 `expect:` 对应具体可观察断言。不要用宽泛 truthy、页面非空或“无异常”代替要求的用户结果。
+## 1. 确认生成范围
 
-## 实现方式
+从计划开始，不读取探索笔记来补隐含步骤。核对 TC、表格与详情、标题、目标文件、setup、步骤及 `expect:`；只生成 `Lifecycle: active` 且 `Status: verified` / `verified with mock` 的案例。已有等价计划可以使用不同列名，依据真实内容对应状态与字段；有充分观察证据时补齐缺失状态，没有证据则回 Explore 补验证，不能默认视为 verified。重复 ID、未确认预期和阻碍只暂停受影响案例。
 
-- 使用项目真实的 `test`/`expect` 导出及 fixture。已有自定义 fixture 时不绕开它；没有时可使用测试框架的标准入口，不凭空发明 fixture、常量文件或 import 路径。
-- 复用 POM 或现有交互辅助层；有 POM 时交互放 POM、业务断言留 spec。项目没有该层时，仅在复用收益明确时提取辅助代码，不为一次测试强建框架。
-- 定位遵循[选择器](selectors-and-locators.md)，沿用实际 test ID 配置。权限、上下文、数据和 mock 在触发相关请求前准备好。
-- 依赖异步数据的步骤按 arrange → arm → act → await → assert 执行；为每个步骤选择实际需要的就绪信号，不给纯本地交互硬加网络等待。
-- [mock](request-mocking.md)仅模拟计划声明的边界，限定单测试和具体请求，保留真实响应契约，断言应能辨别目标模拟状态。
+读取[项目适配](project-conventions.md)、邻近 spec、fixture 和交互辅助代码，确认真实导入与文件位置。
 
-## 验证与交付
+## 2. 将计划映射为代码
 
-使用从目标项目核实的 runner、project、过滤范围及格式检查命令，不直接执行未替换的示例命令。
+默认一个案例对应一个 test、一个分组对应 describe，沿用项目已有等价组织方式。标题与计划一致，每个 test 可辨识对应 TC；拆分、合并或改名时同步映射。
 
-1. 确认新增/更新的案例确实被发现，测试数量与计划生成范围对应。
-2. 关闭重试，运行变更用例或 spec 两次隔离检查；一次 `--repeat-each=2 --retries=0` 或两次等价命令均可，确保独立数据与会话。
-3. 关闭重试运行一次相关测试组，检查共享状态和交互回归；测试组来自真实目录、tag 或配置。保留项目要求的 lint、类型或格式检查；完整套件由项目 CI/验收规则决定。
-4. 记录精确命令、被测版本、通过/失败/受阻及实际证据到[测试报告](../../assets/templates/test-report.md)。通过仅限真正执行的范围，探索 verified 不算执行通过。
+spec 写明从 Git 根可解析的计划路径与覆盖 ID。每个用户步骤保留对应注释或项目 step 机制，每条 `expect:` 落到具体可观察断言。
 
-用[可靠性参考](reliability-and-readiness.md)检查常见时序问题。失败转[诊断与修复](heal.md)，不通过增加 retries 或修改产品行为把结果变绿。应用与计划冲突时保留依据，修正错误测试或报告产品问题；只有已有验收或新确认决定支持时才改变预期。
+下面仅演示标准 Playwright 的对应关系。实际使用时替换计划/spec 路径、标题、页面地址、文案和定位方式；项目已有自定义 `test` fixture 或 POM 时，改用其真实导出和交互方法。
 
-计划内容改变时保留 TC 与同步 ID，已开启同步的计划重新计算[远端差异](sync-test-cases.md)。交付计划、spec、报告与必要证据的真实路径，保留旧产物有效内容。
+```ts
+// plan: docs/tester/profile/e2e-plan.md
+// covers: TC-1
+import { test, expect } from "@playwright/test";
+
+// TC-1 — 标题与计划一致
+test("should require a display name", async ({ page }) => {
+  // 1. 打开编辑页；expect: 名称输入框可编辑
+  await page.goto("/profile/edit");
+  const name = page.getByRole("textbox", { name: "Display name", exact: true });
+  await expect(name).toBeEditable();
+
+  // 2. 清空名称后保存；expect: 显示必填提示
+  await name.fill("");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByRole("alert")).toHaveText("Name is required");
+});
+```
+
+## 3. 接入项目约定与就绪信号
+
+复用项目的 fixture、POM/交互辅助层和常量。有 POM 时交互放 POM、业务断言留 spec；没有时按实际复用需要提取辅助方法。
+
+编写前读[可靠性与就绪信号](reliability-and-readiness.md)。按 arrange → arm → act → await → assert 安排异步步骤，选择真实需要的响应、加载状态或可重试 UI 断言。上例假设必填校验在客户端完成，以错误提示作为就绪结果；依赖服务端响应的步骤应在触发前建立监听，见可靠性参考中的示例。
+
+定位遵循[选择器](selectors-and-locators.md)。权限、上下文、数据和 [mock](request-mocking.md) 在相关请求触发前准备好；mock 仅覆盖计划声明的边界，限定单测试和具体请求、保留响应契约，并用断言区分模拟状态。
+
+每条断言验证计划中的具体结果，不能用宽泛 truthy、页面非空、吞错、固定等待或额外重试掩盖失败。
+
+## 4. 核对代码，交给执行阶段
+
+检查计划与测试映射、导入、步骤、断言和必要辅助代码；对照可靠性参考的八类常见问题检查时序与隔离。生成范围应与可执行案例一致，未生成的 TC 留明原因。
+
+应用与计划冲突时保留依据，修正错误测试或报告产品问题。改变预期必须有已确认验收或新决定支持。计划修改时保留 TC 和同步身份；已开启同步的计划重新计算[远端差异](sync-test-cases.md)。
+
+## 完成条件与下一阶段
+
+- 每个生成的 test 可追溯到计划 TC，步骤和断言完整。
+- 文件、导入、fixture、定位和数据准备符合目标项目。
+- 已核对时序、隔离、mock 范围及未生成案例。
+
+默认继续 [Phase 3 — EXECUTE](ci-execution.md)，执行测试发现、正式验证和报告留存；运行命令与通过要求统一以该阶段为准。用户只要求代码/草稿或明确不执行时，在此交付并标明尚未执行，不宣称测试通过。

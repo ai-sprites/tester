@@ -1,53 +1,62 @@
-# E2E 自动化工作流
+# E2E 工作流
 
-用于探索浏览器用户流程、制定测试计划、生成可重复的 E2E 测试及定位失败。以 Playwright 为主要执行方式；已有其他测试框架时保留目标项目的运行方式，采用相同的计划、证据和可靠性要求，不为使用此流程擅自迁移框架。普通单元、API 验证仍按[测试工作方法](../workflow.md)执行。
+把已确认需求变成能独立运行的浏览器测试。默认采用 Playwright；已采用其他框架的项目沿用原执行方式。框架、目录和命令在首次接触或相关配置变化时核对，记录后复用。
 
-## 阶段与入口
+## 工作顺序
 
 ```text
 需求 / 验收 / 实际改动
-  → 探索 → 可独立交接的计划
-             ├─ 有真实来源工单且需要同步 → 预览远端差异 → 按授权同步
-             └─ 无工单或不需要同步 → 继续本地工作
-  → 从计划生成测试 → 独立运行 → 失败诊断与修复 → 报告
+        │
+Phase 1 │ EXPLORE   在真实页面探索
+        │           └─ docs/tester/<feature-id>/e2e-plan.md
+        │
+        ├─ 需要工单同步 → Phase 1.5 SYNC → 一个测试计划子任务
+        │
+Phase 2 │ GENERATE  只以计划为输入生成测试
+        │           └─ 工程测试目录中的 *.spec.ts
+        │
+Phase 3 │ EXECUTE   独立 runner 执行
+        │           ├─ 通过 → verification.md + evidence/
+        │           └─ 失败 → HEAL → 回到 EXECUTE 复验
 ```
 
-| 当前任务 | 读取 |
+| 阶段 | 输入 | 做什么 | 完成条件 |
+| --- | --- | --- | --- |
+| [1 · Explore](explore.md) | 需求、改动和已有覆盖 | 尝试用户流程，写清步骤与预期 | 计划可独立交接，每个案例都有准确探索状态 |
+| [1.5 · Sync](sync-test-cases.md)（可选） | 计划、真实来源工单及同步请求 | 对账、预览差异、按授权写入并回读 | 一份计划对应一个已验证远端对象，或明确同步受阻 |
+| [2 · Generate](generate.md) | 可生成的计划案例 | 复用项目 fixture/POM，逐条实现步骤和断言 | spec 与计划对应，交给执行阶段 |
+| [3 · Execute](ci-execution.md) | spec、真实环境及项目命令 | 隔离运行、相关组验证，保存报告 | 两次隔离和一次相关组均无重试通过；其余结果如实记录 |
+| [Heal](heal.md)（失败分支） | 失败命令、计划、report/trace | 定位测试、产品、环境或需求问题 | 测试修复后复验，或交付可复现问题及受阻范围 |
+
+完整自动化任务顺序走完；已有计划直接进入 Generate，已有失败直接进入 Heal。同步受阻不阻止本地测试。单元、组件、API 等任务走 [一般验证](../workflow.md)。
+
+## 六条执行规则
+
+1. **探索不等于测试通过。** 页面观察用于选案例；通过结论来自正式 runner 执行。
+2. **生成从计划开始。** 另一会话仅凭计划和项目代码就应能写测试，不依赖探索聊天或 scratch。
+3. **只生成已验证的 active 案例。** `blocked`、`unverified` 保留缺口；`obsolete` 保留历史；`TC-n` 永不重排或复用。
+4. **每条预期有断言，每次异步交互有就绪信号。** 遵循 arrange → arm → act → await → assert，不以 sleep、networkidle、吞错或加 retries 修失败。
+5. **执行条件明确。** 新增/修复 E2E 按 Phase 3 完成两次无重试隔离和一次无重试相关组验证；无法执行的项记受阻。完整套件按项目 CI/验收要求运行。
+6. **CI 独立运行。** 只依赖仓库 runner、配置、fixture 和正式凭据来源，不依赖 AI 会话、MCP、手动登录窗口或探索脚本。
+
+## 产物
+
+```text
+docs/tester/<feature-id>/
+├── e2e-plan.md       用例、步骤、预期和探索状态
+├── verification.md   实际执行、失败、缺口和判定
+└── evidence/         必要日志、截图、trace 等证据
+```
+
+spec、POM、fixture 和可执行配置放工程原目录。只清理本次无用 scratch，保留支持结论的证据。填写和交接时见 [交付与留存](../delivery.md)。
+
+## 需要时再读
+
+| 遇到的问题 | 参考 |
 | --- | --- |
-| 没有计划，需要了解流程和覆盖范围 | [探索](explore.md) |
-| 编写或更新用例计划 | [计划模板](../../assets/templates/e2e-plan.md) |
-| 需要把计划同步到来源工单 | [可选远端同步](sync-test-cases.md) |
-| 已有计划，需要新增或更新自动化测试 | [生成](generate.md) |
-| 测试失败、偶发失败、仅 CI 失败 | [失败诊断与修复](heal.md) |
-| 执行或检查 CI 配置 | [CI 执行](ci-execution.md) |
-
-只读取本次阶段和相关参考，不要求每次从探索重新开始。完整需求可顺序推进；已明确只做计划或诊断时按请求范围结束。
-
-## 贯穿各阶段的约定
-
-1. 首次处理目标项目，按[项目适配](project-conventions.md)核对真实配置、命令、目录、fixture 和环境。此 Skill 不预设业务模型、工单项目、登录方式、接口或浏览器 project 名称。
-2. 探索证据说明“看到了什么”，不能证明自动化测试通过。计划必须自包含；生成阶段从计划重新推导测试，不能依赖探索会话的隐含知识。需要隔离时可交给新会话或子代理，不强制用户另开任务。
-3. 用例保留稳定 `TC-n` 与 `Lifecycle`。仅为 `active` 且探索状态为 `verified` 或 `verified with mock` 的行生成测试。`blocked`、`unverified` 保留在计划和覆盖缺口中，不能被悄悄删除、自动标过或阻挡其他明确用例。
-4. 按[可靠性与就绪信号](reliability-and-readiness.md)安排交互；禁止为了变绿弱化断言、吞错、增加固定等待或重试。测试需要独立，可在不同顺序运行。
-5. 新增或修复的 E2E 默认需关闭重试后两次隔离通过，并一次通过相关测试组；遵守项目更严格要求。无条件执行时记录受阻部分，不冒称完成。完整套件按目标项目的 CI/验收要求运行，不自动扩大每次本地检查范围。
-6. CI 使用仓库自身的测试 runner、配置、fixture 和正式凭据来源，独立于 AI 会话、MCP 或探索浏览器。迁入此 Skill 本身不会配置流水线或定时任务。
-7. 工单同步是可选能力：没有真实来源工单时不发现或调用工单工具；有工单也不自动获得外部写入授权。已明确的同步授权直接沿用，不重复询问同一动作。
-
-## 文件与交付
-
-- 计划保存为业务仓库 `docs/tester/<feature-id>/e2e-plan.md`；测试报告使用[完整模板](../../assets/templates/test-report.md)，通常保存为同目录 `verification.md`。
-- 正式日志、截图、trace 和报告附件保留到该功能目录的 `evidence/`，按项目保密、忽略及 CI artifact 规则管理。保留证据不等于把认证状态或全部二进制提交 Git。
-- 测试代码、POM、fixture、可执行配置和 runner 临时输出使用工程原生目录。必要证据从输出位置整理留存，交付能实际访问的路径。
-- 仅清理本次产生且无留存价值的 scratch、探测脚本和重复快照；保留用户原文件及支持失败判断的证据。计划与对应测试应作为同一改动交付，未提交或未推送如实说明。
-
-## 按需参考
-
-| 需要确定的内容 | 参考 |
-| --- | --- |
-| 目录、框架、fixture、命名和命令 | [项目适配](project-conventions.md) |
-| 登录、会话、网络和数据准备 | [认证与环境](auth-and-environment.md) |
-| 浏览器能力与探测回退 | [探索工具](exploration-tooling.md) |
-| 选择器、原生与自定义控件断言 | [选择器](selectors-and-locators.md) |
-| 竞态、重渲染、动画、debounce 和 mock 时序 | [可靠性](reliability-and-readiness.md) |
-| 安全读响应 patch、窄范围 mock | [请求模拟](request-mocking.md) |
-| CI 独立执行、重试和证据 | [CI 执行](ci-execution.md) |
+| 不清楚当前项目的目录、fixture 或运行命令 | [项目适配](project-conventions.md) |
+| 登录、会话、网络或测试数据不可用 | [认证与环境](auth-and-environment.md) |
+| 浏览器工具无法访问，或需要 probe/debug 回退 | [探索工具](exploration-tooling.md) |
+| 选择器、受控输入或自定义控件断言 | [选择器](selectors-and-locators.md) |
+| 竞态、动画、重渲染、debounce 或 mock 时序 | [可靠性与就绪信号](reliability-and-readiness.md) |
+| 需要安全构造服务端分支 | [请求模拟](request-mocking.md) |

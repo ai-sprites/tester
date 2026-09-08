@@ -1,70 +1,92 @@
 # tester
 
-独立测试角色：验证约定行为，保留真实证据并反馈问题；内置从浏览器探索到自动化测试生成、执行与修复的 E2E 工作流。
+验证功能是否符合约定，并把浏览器用户流程变成可重复执行的自动化测试。
 
-## 复制到 AI 聊天
+## 怎么工作
 
-把下面这段粘贴到当前项目的 AI 聊天，让 AI 读取手册、自行识别客户端并放置资源。
+一般功能验证按 **明确范围 → 选择检查 → 实际执行 → 测试报告** 完成。需要浏览器自动化时，按下面的阶段推进：
 
 ```text
-请阅读 https://github.com/ai-sprites/tester 的 README、接入手册和资源清单，将 sprite-tester 接入当前项目，一并带上本职能力 sprite-tester-verification 的完整 Skill、工作流和模板，包括内置 E2E 探索、计划、可选工单同步、生成、执行与修复。
-请自行识别当前客户端及项目已有结构，使用同一明确版本的资源。角色正文、Skill 和模板原样完整拷贝，只适配必要的目录与客户端元数据格式，不重新概括、改写或删减内容，保留我的项目规则和自定义；其他专项 Skill 按我的明确请求或实际任务需要处理。
-资料 host repo 和产物业务仓库已明确的直接沿用，缺项合并用白话问一次，允许稍后配置。本角色生成的文档、记录和验证证据统一放在业务仓库的 docs/tester/ 下，可再按功能分子目录；旧散落产物保留内容迁入，并同步引用和已有索引。需要跨 Git 资料桥接时按手册自动补齐并告知我，不另外索取安装确认。
-完成后核对实际文件与相对引用，说明采用版本、保存位置、如何调用，以及当前客户端确需我完成的加载步骤。只有聊天权限时先在本会话使用，明确没有写入项目；不能读取源文件时直接说明，不自行编一个替代版本。
+需求 / 验收 / 改动
+       │
+  1. Explore     探索页面，产出测试计划
+       ├─ 1.5 Sync（可选）  把计划同步到来源工单
+       │
+  2. Generate    从计划生成 spec
+       │
+  3. Execute     独立运行，保存测试报告和证据
+       └─ 失败 → Heal → 复验
 ```
 
-**[详细接入手册](docs/installation.md)** 说明 AI 如何选择资源、识别客户端、放置文件、处理已有内容和验证结果。用户无需执行安装命令；资料位置会主动引导确认，也可稍后配置。
+| 现在手里有什么 | 从哪里开始 | 得到什么 |
+| --- | --- | --- |
+| 需求或改动，还没有计划 | [Explore](skills/sprite-tester-verification/references/e2e/explore.md) | 用户步骤、预期、覆盖缺口和可生成案例 |
+| 已有明确计划 | [Generate](skills/sprite-tester-verification/references/e2e/generate.md) | 与计划对应的测试代码，随后执行 |
+| 已有 spec | [Execute](skills/sprite-tester-verification/references/e2e/ci-execution.md) | 实际通过/失败/受阻结果与证据 |
+| 失败或不稳定测试 | [Heal](skills/sprite-tester-verification/references/e2e/heal.md) | 修复与复验，或可复现的产品/环境问题 |
+
+完整流程与完成要求见 [E2E 工作流](skills/sprite-tester-verification/references/e2e/workflow.md)。已有成果从相应阶段继续；只要计划或诊断时就在该范围结束。
+
+## 直接这样使用
+
+接入后，向 AI 描述任务即可：
+
+> 请用 tester，按当前验收要求和实际改动做功能验证，记录结果、问题和未覆盖部分。
+
+> 请用 tester 完成这次改动的 E2E：先探索并写计划，再生成测试、执行和修复失败。
+
+> 请用 tester 修复这个失败用例，保留原验收预期，复验后更新报告。
+
+本职能力入口是 `sprite-tester-verification`，包含一般验证和完整 E2E 流程。阶段文档随同一个 Skill 安装，按任务读取；不需要其他角色、完整 PRD、Jira 或固定浏览器 MCP。
+
+## 产物与完成标准
+
+- 计划、测试报告和必要证据放业务仓库 `docs/tester/<feature-id>/`，也可直接放 `docs/tester/`；spec、fixture、POM 和配置沿用工程原目录。
+- 探索用于制定计划，执行结果由正式 runner 证明。新增/修复 E2E 默认需两次无重试隔离和一次无重试相关组通过，完整套件按项目 CI 要求执行。
+- 未执行、受阻、失败和覆盖缺口如实保留。通过结论说明版本与适用范围；测试角色不替代产品决定或最终发布决定。
+
+完整报告与交接要求见 [交付与留存](skills/sprite-tester-verification/references/delivery.md)，跨 Git 使用见 [产物交接说明](docs/artifact-handoff.md)。
+
+## 接入当前项目
+
+把下面这段粘贴给项目中的 AI：
+
+```text
+请阅读 https://github.com/ai-sprites/tester 的 README 和接入手册，把 tester 角色及 sprite-tester-verification 完整 Skill 接入当前项目，包括全部工作流、参考和模板。
+固定同一明确版本，原样复制完整内容，只适配当前客户端的目录、元数据和入口引用；保留项目规则与自定义。资料来源和业务仓库已有选择就沿用，缺项合并问一次，允许稍后配置。
+完成后核对文件与相对引用，说明版本、保存位置、调用方式和实际加载状态。接入和后续维护按手册完成，取不到源文件时说明缺项，不自行改写替代。
+```
+
+[接入手册](docs/installation.md) 包含完整复制、已有内容更新、资料选择和加载检查。客户端未自动加载时，让 AI 先读取已保存的角色文件或 Skill 入口；只有聊天权限则在会话中使用，并明确未写入项目。
 
 ## 资源清单
 
-本清单对应当前阅读的仓库版本，资源链接随该页面或 checkout 的版本变化。接入时先固定为一个完整 Git 提交，再读取该提交的同批资源。历史 **v0.2.0** 仍可明确选用，但内容以该标签为准。角色 MD 定义职责与清单，具体能力在 Skill 中；本职 Skill 默认随角色接入，完整保留其工作流、模板和相对目录。安装资源不等于生成所有业务文档。
+角色负责职责与检查清单；Skill 提供实际工作方法。默认同时接入角色和完整 Skill，可单独使用 Skill。所有下列资源来自同一版本，按需读取，不要求每次任务读完。
 
-| 资源 | 用途 | 接入范围 |
-| --- | --- | --- |
-| [templates/agent.md](templates/agent.md) | 职责、边界与交付检查清单 | 默认接入 |
-| [skills/sprite-tester-verification/SKILL.md](skills/sprite-tester-verification/SKILL.md) | 本职能力入口 | 随角色默认完整接入 |
-| [skills/sprite-tester-verification/assets/templates/test-report.md](skills/sprite-tester-verification/assets/templates/test-report.md) | 完整产物模板 | 随角色默认完整接入 |
-| [skills/sprite-tester-verification/references/workflow.md](skills/sprite-tester-verification/references/workflow.md) | 工作流与专业参考 | 随角色默认完整接入 |
-| [skills/sprite-tester-verification/references/e2e/workflow.md](skills/sprite-tester-verification/references/e2e/workflow.md) | E2E 阶段入口与完成要求 | 随角色默认完整接入，按任务读取 |
-| [skills/sprite-tester-verification/references/e2e/explore.md](skills/sprite-tester-verification/references/e2e/explore.md) | 探索、覆盖与计划交接 | 随角色默认完整接入，按任务读取 |
-| [skills/sprite-tester-verification/references/e2e/sync-test-cases.md](skills/sprite-tester-verification/references/e2e/sync-test-cases.md) | 可选工单同步、身份与恢复 | 随角色默认完整接入，按任务读取 |
-| [skills/sprite-tester-verification/references/e2e/generate.md](skills/sprite-tester-verification/references/e2e/generate.md) | 从计划生成和验证测试 | 随角色默认完整接入，按任务读取 |
-| [skills/sprite-tester-verification/references/e2e/heal.md](skills/sprite-tester-verification/references/e2e/heal.md) | 失败诊断与修复 | 随角色默认完整接入，按任务读取 |
-| [skills/sprite-tester-verification/references/e2e/project-conventions.md](skills/sprite-tester-verification/references/e2e/project-conventions.md) | 目标项目结构和命令适配 | 随角色默认完整接入，按任务读取 |
-| [skills/sprite-tester-verification/references/e2e/auth-and-environment.md](skills/sprite-tester-verification/references/e2e/auth-and-environment.md) | 认证、会话、网络及数据 | 随角色默认完整接入，按任务读取 |
-| [skills/sprite-tester-verification/references/e2e/exploration-tooling.md](skills/sprite-tester-verification/references/e2e/exploration-tooling.md) | 浏览器探索与回退 | 随角色默认完整接入，按任务读取 |
-| [skills/sprite-tester-verification/references/e2e/selectors-and-locators.md](skills/sprite-tester-verification/references/e2e/selectors-and-locators.md) | 定位与控件断言 | 随角色默认完整接入，按任务读取 |
-| [skills/sprite-tester-verification/references/e2e/reliability-and-readiness.md](skills/sprite-tester-verification/references/e2e/reliability-and-readiness.md) | 就绪顺序和八类常见不稳定问题 | 随角色默认完整接入，按任务读取 |
-| [skills/sprite-tester-verification/references/e2e/request-mocking.md](skills/sprite-tester-verification/references/e2e/request-mocking.md) | 范围明确的请求模拟 | 随角色默认完整接入，按任务读取 |
-| [skills/sprite-tester-verification/references/e2e/ci-execution.md](skills/sprite-tester-verification/references/e2e/ci-execution.md) | 独立 CI 执行及证据 | 随角色默认完整接入，按任务读取 |
-| [skills/sprite-tester-verification/assets/templates/e2e-plan.md](skills/sprite-tester-verification/assets/templates/e2e-plan.md) | 完整 E2E 测试计划模板 | 随角色默认完整接入 |
+<details>
+<summary>展开完整资源清单</summary>
 
-本职能力由 `sprite-tester-verification` 提供，默认随角色接入，也可单独使用该 Skill。
+| 资源 | 用途 |
+| --- | --- |
+| [角色定义](templates/agent.md) | 职责、边界和完成检查 |
+| [Skill 入口](skills/sprite-tester-verification/SKILL.md) | 根据当前任务直接选择流程 |
+| [一般验证](skills/sprite-tester-verification/references/workflow.md) | 范围、检查、执行和报告 |
+| [交付与留存](skills/sprite-tester-verification/references/delivery.md) | 模板、目录、历史、索引和版本 |
+| [测试报告模板](skills/sprite-tester-verification/assets/templates/test-report.md) | 正式验证报告 |
+| [E2E 工作流](skills/sprite-tester-verification/references/e2e/workflow.md) | 阶段、产物和完成标准 |
+| [Phase 1 · Explore](skills/sprite-tester-verification/references/e2e/explore.md) | 页面探索与计划 |
+| [Phase 1.5 · Sync](skills/sprite-tester-verification/references/e2e/sync-test-cases.md) | 可选工单同步 |
+| [Phase 2 · Generate](skills/sprite-tester-verification/references/e2e/generate.md) | 从计划生成 spec |
+| [Phase 3 · Execute](skills/sprite-tester-verification/references/e2e/ci-execution.md) | 运行、CI 和执行证据 |
+| [Heal](skills/sprite-tester-verification/references/e2e/heal.md) | 失败诊断与复验 |
+| [E2E 计划模板](skills/sprite-tester-verification/assets/templates/e2e-plan.md) | 案例、步骤、预期和交接 |
+| [项目适配](skills/sprite-tester-verification/references/e2e/project-conventions.md) | 实际目录、fixture 和命令 |
+| [认证与环境](skills/sprite-tester-verification/references/e2e/auth-and-environment.md) | 登录、网络和测试数据 |
+| [探索工具](skills/sprite-tester-verification/references/e2e/exploration-tooling.md) | 浏览器及 probe/debug 回退 |
+| [选择器](skills/sprite-tester-verification/references/e2e/selectors-and-locators.md) | 定位与控件断言 |
+| [可靠性](skills/sprite-tester-verification/references/e2e/reliability-and-readiness.md) | 就绪顺序和八类不稳定问题 |
+| [请求模拟](skills/sprite-tester-verification/references/e2e/request-mocking.md) | 安全、窄范围的响应补丁 |
 
-E2E 能力集成在同一个本职 Skill 中，按当前阶段读取参考。保留独立计划、稳定案例 ID、明确就绪信号、两次隔离与相关测试组验证，以及可选远端同步的防重复核验；具体应用、登录、业务数据、测试目录和 CI 设置由目标项目提供。工单系统与浏览器 MCP 均非必需依赖。
+</details>
 
-接入、加载检查和用户需要完成的步骤统一见 [接入手册](docs/installation.md)，不复制成业务文档。
-
-## 开始使用
-
-完成接入后，直接向 AI 描述任务，例如：
-
-> 请用 sprite-tester，依据当前验收要求和实际改动验证功能，记录执行过的检查、发现的问题和未覆盖部分。
-
-需要完整 E2E 自动化时，例如：
-
-> 请用 sprite-tester，根据这次改动探索用户流程，形成测试计划，再按本项目测试配置生成并验证 E2E 用例；失败时定位原因，把计划、报告和必要证据保存到 docs/tester/。
-
-客户端没有自动加载时，让 AI 先读取保存的角色文件或 Skill 入口。读取说明、写入项目和启动原生子代理是不同结果，按实际完成情况判断。
-
-角色以当前请求和项目已有约定为依据；待确定项只影响依赖它的工作，不要求其他角色、完整 PRD 或固定流程。
-
-## 留存与交接
-
-正式功能验证、回归或验收默认保存测试报告，列出逐项结果、缺陷与复现、未覆盖原因和剩余风险；不能只给“通过”或口头测试计划。内容详略随任务调整，复用已有文档的有效内容；小型答疑不强建空文档。本角色生成的测试报告、复现记录和验证证据（含日志、截图及附件）统一保存到业务仓库的 `docs/tester/`，可按功能在角色目录下再建子目录，例如 `docs/tester/<feature-id>/verification.md`。新增和更新产物均遵守此路径；已有散落产物先读取，在保留内容的前提下迁入角色目录，目标同名文件不得直接覆盖，迁移后同步相关引用和已有索引。产品代码、测试代码及测试配置仍使用工程原生目录，角色与 Skill 安装资源保持原位。上游资料可从实际所在位置读取。交付实际文件的真实链接。
-
-角色可以自由组合；资料 host repo、版本和功能或文件由你指定，已有项目约定就沿用。当前任务确需跨 Git 读取、固定版本、比较或留存时，AI 会复用或按需补齐 artifact-bridge；普通本地资料和纯角色接入不安装它。目录、Git 与认证条件见 [产物交接说明](docs/artifact-handoff.md)。
-
-## 后续维护
-
-需要追加、更新或移除资源时，直接说明目标。AI 对照明确版本与现有文件比较，保留自定义，只处理指定范围；具体规则见 [手册](docs/installation.md#已有内容与后续维护)。
+资源清单对应当前页面或 checkout 的版本；接入时固定完整 Git 提交，再取该提交的整套资源。历史 `v0.2.0` 仍可明确选用，内容以该标签为准。追加、更新或移除资源按 [手册](docs/installation.md#已有内容与后续维护) 处理，保留自定义和未选资源。

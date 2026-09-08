@@ -16,6 +16,32 @@
 
 不以固定时长判断就绪，不新增 `waitForTimeout` 或 `networkidle` 等待来恢复绿色结果；轮询、动画和环境负载会让它们失真。已有调用按本次受影响范围处理，不照抄为模式，也不借机重写无关代码。缺少真实信号时记录缺口并定位原因，不编造等待。
 
+## 例：等待本次搜索的响应与结果
+
+以下仅演示顺序；端点、参数、控件和结果必须来自当前计划。若操作会触发多个同类请求，继续收窄请求身份。
+
+```ts
+// arrange：认证、测试数据与必要 route 已准备好，目标结果尚未出现
+const result = page.getByRole("link", { name: "Example result", exact: true });
+await expect(result).toBeHidden();
+// arm：先订阅本次请求，再执行触发动作
+const response = page.waitForResponse((res) => {
+  const url = new URL(res.url());
+  return url.pathname === "/api/search"
+    && url.searchParams.get("q") === "example"
+    && res.request().method() === "GET"
+    && res.status() === 200;
+});
+
+// act
+await page.getByRole("searchbox").fill("example");
+await page.getByRole("button", { name: "Search", exact: true }).click();
+// await：响应完成还不代表界面已更新
+await response;
+// assert：确认本次查询对应的实际结果
+await expect(result).toBeVisible();
+```
+
 ## 常见失败与处理
 
 | 症状或类别 | 应核对的原因 | 修复与验证重点 |
