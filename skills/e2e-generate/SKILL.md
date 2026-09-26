@@ -1,25 +1,25 @@
 ---
 name: e2e-generate
-description: "E2E Phase 2：根据已验证的计划生成 Playwright spec，复用项目 fixture 和页面对象，并衔接独立执行。"
+description: "根据明确验收或测试计划生成 Playwright spec，复用项目 fixture 和页面对象，并衔接实际执行。"
 ---
 
 # Phase 2 — GENERATE：从计划生成测试
 
-**输入：**`docs/tester/<feature-id>/e2e-plan.md` 或已明确的等价计划，以及目标项目的测试配置和辅助代码。
+**输入：**已明确的验收或测试计划，以及目标项目的测试配置和辅助代码。
 
-**输出：**工程原生目录中的 spec 及必要辅助代码，与计划 TC 对应。此阶段完成代码准备，真实运行在 [Phase 3 — EXECUTE](../e2e-workflow/references/ci-execution.md) 完成。
+**输出：**工程原生目录中的 spec 及必要辅助代码，可追溯到验收或已有计划案例。此阶段完成代码准备，真实运行在 [Phase 3 — EXECUTE](../e2e-workflow/references/ci-execution.md) 完成。
 
 ## 1. 确认生成范围
 
-使用独立生成上下文：新会话或隔离子代理只接收计划和必要项目代码，不传探索笔记；若在同一会话继续，也重新读计划，只从计划推导步骤。核对 TC、表格与详情、标题、目标文件、setup、步骤及 `expect:`；只生成 `Lifecycle: active` 且 `Status: verified` / `verified with mock` 的案例。已有等价计划可以使用不同列名，依据真实内容对应状态与字段；有充分观察证据时补齐缺失状态，没有证据则回 Explore 补验证，不能默认视为 verified。重复 ID、未确认预期和阻碍只暂停受影响案例。
+从明确验收或现有计划核对目标行为、步骤、前置条件、测试数据和可观察预期。信息充分即可生成，不强制先探索、另开上下文或重建计划；缺少关键预期或交互依据时，按需回 Explore 补充，只暂停受影响案例。观察、推断和实际执行结果分别记录。
 
 读取[项目适配](../e2e-workflow/references/repo-conventions.md)、邻近 spec、fixture 和交互辅助代码，确认真实导入与文件位置。
 
 ## 2. 将计划映射为代码
 
-一个计划案例对应一个 `test`，一个计划组对应一个 `describe`。逐字保留计划的简单英文 `should ...` 标题，每个 test 可辨识对应 TC；需求确需拆分、合并或改名时，先更新计划和稳定映射，再修改测试。
+沿用项目测试组织和命名方式，每个 test 可追溯到对应验收或计划案例。需要拆分、合并或改名时，同步受影响的计划引用，不重复维护同一份需求。
 
-spec 写明从 Git 根可解析的计划路径与覆盖 ID。每个用户步骤保留对应注释或项目 step 机制，每条 `expect:` 落到具体可观察断言。
+有计划时关联真实路径与用例 ID；没有计划时引用验收来源。每条必要预期落实为可观察断言，复杂步骤可使用项目现有 step 机制。
 
 下面仅演示标准 Playwright 的对应关系。实际使用时替换计划/spec 路径、标题、页面地址、文案和定位方式；项目已有自定义 `test` fixture 或 POM 时，改用其真实导出和交互方法。
 
@@ -48,19 +48,19 @@ test("should require a display name", async ({ page }) => {
 
 编写前读[可靠性与就绪信号](../e2e-workflow/references/reliability-and-readiness.md)。按 arrange → arm → act → await → assert 安排异步步骤，选择真实需要的响应、加载状态或可重试 UI 断言。上例假设必填校验在客户端完成，以错误提示作为就绪结果；依赖服务端响应的步骤应在触发前建立监听，见可靠性参考中的示例。
 
-定位遵循[选择器](../e2e-workflow/references/selectors-and-locators.md)。权限、上下文、数据和 [mock](../e2e-workflow/references/request-mocking.md) 在相关请求触发前准备好；mock 仅覆盖计划声明的边界，限定单测试和具体请求、保留响应契约，并用断言区分模拟状态。
+定位遵循[选择器](../e2e-workflow/references/selectors-and-locators.md)。权限、上下文、数据和 [mock](../e2e-workflow/references/request-mocking.md) 在相关请求触发前准备好；mock 仅覆盖本次声明的边界，限定单测试和具体请求、保留响应契约，并用断言区分模拟状态。
 
-每条断言验证计划中的具体结果，不能用宽泛 truthy、页面非空、吞错、固定等待或额外重试掩盖失败。
+每条断言验证验收或计划中的具体结果，不能用宽泛 truthy、页面非空、吞错、固定等待或额外重试掩盖失败。
 
 ## 4. 核对代码，交给执行阶段
 
-检查计划与测试映射、导入、步骤、断言和必要辅助代码；对照可靠性参考的八类常见问题检查时序与隔离。生成范围应与可执行案例一致，未生成的 TC 留明原因。
+检查验收/计划与测试的对应关系、导入、步骤、断言和必要辅助代码；按实际风险检查时序、隔离与 mock。未实现的必要覆盖说明原因。
 
-应用与计划冲突时保留依据，修正错误测试或报告产品问题。改变预期必须有已确认验收或新决定支持。计划修改时保留 TC 和同步身份；有来源 Jira 工单的计划重新计算[远端差异](../e2e-sync-test-cases/SKILL.md)。
+应用与计划冲突时保留依据，修正错误测试或报告产品问题。改变预期必须有已确认验收或新决定支持。计划修改时保留 TC 和有效历史；本次需要回写 Jira 时，按[工单关联](../e2e-sync-test-cases/SKILL.md)更新已有记录。
 
 ## 完成条件与下一阶段
 
-- 每个生成的 test 可追溯到计划 TC，步骤和断言完整。
+- 每个生成的 test 可追溯到验收或计划案例，步骤和断言完整。
 - 文件、导入、fixture、定位和数据准备符合目标项目。
 - 已核对时序、隔离、mock 范围及未生成案例。
 

@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | [e2e-workflow](skills/e2e-workflow/SKILL.md) | 总流程、阶段选择、执行标准 | 明确下一阶段和完成条件 |
 | [e2e-explore](skills/e2e-explore/SKILL.md) | 读需求、检查已有覆盖、探索页面 | 可独立交接的测试计划 |
-| [e2e-sync-test-cases](skills/e2e-sync-test-cases/SKILL.md) | 有来源 Jira 工单时，同步一份完整计划 | 一个核验后的普通 Sub-task |
+| [e2e-sync-test-cases](skills/e2e-sync-test-cases/SKILL.md) | 按任务需要关联 Jira 测试记录 | 已核验的更新与链接 |
 | [e2e-generate](skills/e2e-generate/SKILL.md) | 从计划生成测试，衔接独立执行 | 与 TC 对应的 Playwright spec |
 | [e2e-heal](skills/e2e-heal/SKILL.md) | 诊断失败、修复测试、复验 | 修复结果，或可复现的问题记录 |
 
@@ -35,9 +35,7 @@ skills/
 需求 / 验收 / 改动
        │
 Phase 1    e2e-explore          → 测试计划
-       ├─ 有 Jira 工单
-       │   e2e-sync-test-cases  → 一个测试计划 Sub-task（按授权写入）
-       └─ 无工单：跳过同步
+       └─ 需要回写 Jira 时：e2e-sync-test-cases → 关联已有工单
        │
 Phase 2    e2e-generate         → Playwright spec
        │
@@ -64,14 +62,14 @@ Phase 3 的执行方法保留在 [ci-execution.md](skills/e2e-workflow/reference
 ```text
 请读取 https://github.com/ai-sprites/tester 的 README 和接入手册，将 tester 角色与 e2e-workflow、e2e-explore、e2e-sync-test-cases、e2e-generate、e2e-heal 五个完整 Skill 接入当前项目。
 固定同一明确版本，原样复制全部 SKILL.md 和参考文件，保持五个同级目录、名称和内部相对引用；只适配当前客户端的目录、元数据和入口。保留项目规则及用户自定义，不合并 Skill、不用摘要替代完整内容。
-完成后核对实际文件、引用、采用版本和加载状态。资料来源和业务仓库已有选择就沿用，缺项合并问一次，可稍后配置。升级旧聚合版按接入手册完成替换与自定义保护。
+完成后核对实际文件、引用、采用版本和加载状态。沿用项目已有目录，不预先配置资料来源。升级旧聚合版按接入手册完成替换与自定义保护。
 ```
 
 [接入手册](docs/installation.md) 说明完整安装、升级与加载检查。具体项目的应用地址、账号、fixture、测试目录和 CI 配置从目标仓库读取。
 
 ## 产物与一般职责
 
-计划、报告和必要证据保存到业务仓库 `docs/tester/`；测试代码、POM、fixture 和配置保留工程原目录。探索不等于执行通过，失败不能靠弱化断言隐藏；新增/修复用例需两次无重试隔离和一次无重试相关组验证。详见 [交付与留存](skills/e2e-workflow/references/delivery.md) 和 [产物交接](docs/artifact-handoff.md)。
+需求、验收和相关版本通过现有 Jira、文档或代码 MCP 按需获取，也可直接使用本地或用户提供的材料。计划、报告和证据沿用项目位置；没有约定时可用 `docs/tester/`。测试代码、POM、fixture 和配置保留工程原目录。探索不等于执行通过，失败不能靠弱化断言隐藏；新增/修复用例先运行相关测试，按项目策略和实际风险追加隔离、重复或组合验证。详见 [交付与留存](skills/e2e-workflow/references/delivery.md) 和 [产物交接](docs/artifact-handoff.md)。
 
 一般测试的验收/风险映射、真实执行、缺陷证据和报告要求保留在 [docs/testing.md](docs/testing.md)，不另造笼统的测试 Skill。
 
@@ -91,7 +89,7 @@ Phase 3 的执行方法保留在 [ci-execution.md](skills/e2e-workflow/reference
 | [可靠性](skills/e2e-workflow/references/reliability-and-readiness.md) | 就绪顺序与八类常见失败 |
 | [请求模拟](skills/e2e-workflow/references/request-mocking.md) | 窄范围路由和安全响应 patch |
 | [CI 执行](skills/e2e-workflow/references/ci-execution.md) | 独立执行、复验与证据 |
-| [交付与留存](skills/e2e-workflow/references/delivery.md) | 模板、目录、历史、索引与版本 |
+| [交付与留存](skills/e2e-workflow/references/delivery.md) | 计划、报告、真实来源与证据 |
 | [测试报告模板](skills/e2e-workflow/references/test-report.md) | 正式执行报告 |
 
 </details>
